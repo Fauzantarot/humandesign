@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator Human Design</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#faf8f4;--card:#fff;--tx:#1f1d1a;--mut:#6d675f;--ln:#e2dcd0;--ac:#7a4fd0;--des:#c0392b;--acf:#e7dcfb;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17151a;--card:#211e26;--tx:#efeae2;--mut:#a29b90;--ln:#3a3541;--ac:#a98bf0;--des:#ff7b6b;--acf:#44366b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17151a;--card:#211e26;--tx:#efeae2;--mut:#a29b90;--ln:#3a3541;--ac:#a98bf0;--des:#ff7b6b;--acf:#44366b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.05rem;margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin-bottom:14px;overflow-x:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--ln);border-radius:9px;background:var(--bg);color:var(--tx);font:inherit}
+button{margin-top:12px;width:100%;padding:11px;border:0;border-radius:10px;background:var(--ac);color:#fff;font:600 1rem system-ui;cursor:pointer}
+#err{color:var(--des);margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.k{background:var(--bg);border-radius:10px;padding:10px}.k b{display:block;font-size:.75rem;color:var(--mut);font-weight:500}.k span{font-weight:600}
+table{border-collapse:collapse;width:100%;min-width:300px}th,td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--ln)}
+th:first-child,td:first-child{text-align:left}small{display:block;color:var(--mut);font-size:.72rem}
+.des{color:var(--des);font-weight:600}.pers{font-weight:600}
+.chip{display:inline-block;margin:2px 4px 2px 0;padding:2px 9px;border-radius:99px;background:var(--acf);font-size:.85rem}
+.note{color:var(--mut);font-size:.82rem}
+svg{display:block;margin:0 auto;max-width:300px;width:100%;height:auto}
+@media(max-width:480px){.row{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Kalkulator Human Design</h1>
+<p class="sub">Hitung bodygraph dari data lahir: gerbang, saluran, pusat, tipe, otoritas, profil, dan variabel.</p>
+<div class="card">
+<label>Nama (opsional)</label><input id="n" placeholder="Nama">
+<div class="row" style="margin-top:10px">
+<div><label>Tanggal lahir</label><input id="d" type="date"></div>
+<div><label>Jam lahir</label><input id="t" type="time"></div></div>
+<label style="margin-top:10px">Kota lahir (ketik, lalu pilih dari daftar)</label>
+<input id="cty" list="cl" placeholder="Contoh: Makassar"><datalist id="cl"></datalist>
+<div class="row" style="margin-top:10px"><div><label>Lintang (opsional)</label><input id="la" placeholder="-5.1477"></div><div><label>Bujur (opsional)</label><input id="lo" placeholder="119.4327"></div></div>
+<div class="row" style="margin-top:10px"><div><label>Zona waktu</label><select id="z"></select></div><div><label>Jenis Node</label><select id="nd"><option value="t">Sejati</option><option value="m">Rata-rata</option></select></div></div>
+<button id="go">Hitung</button><div id="err"></div></div>
+<div id="out"></div>
+<p class="note">Posisi planet dihitung dari efemeris astronomi (semu, geosentris, zodiak tropis), Desain = Matahari 88° sebelum lahir, Node default sejati. Lokasi lahir hanya dipakai untuk menentukan zona waktu, karena chart Human Design tidak bergantung pada koordinat. Aturan zona waktu historis diambil dari database zona waktu peramban. Selisih beberapa menit pada jam lahir bisa menggeser garis atau gerbang, terutama untuk Bulan.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script>
+const GO=[41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
+const CEN={Head:[64,61,63],Ajna:[47,24,4,17,43,11],Throat:[62,23,56,35,12,45,33,8,31,20,16],G:[1,13,25,46,2,15,10,7],Heart:[21,40,26,51],Spleen:[48,57,44,50,32,28,18],Solar:[36,22,37,6,49,55,30],Sacral:[5,14,29,59,9,3,42,27,34],Root:[53,60,52,19,39,41,58,38,54]};
+const CN={Head:'Kepala',Ajna:'Ajna',Throat:'Tenggorokan',G:'G (Identitas)',Heart:'Jantung (Ego)',Spleen:'Limpa',Solar:'Plexus Surya',Sacral:'Sakral',Root:'Akar'};
+const XY={Head:[150,30],Ajna:[150,95],Throat:[150,165],G:[150,245],Heart:[210,290],Spleen:[65,350],Sacral:[150,365],Solar:[235,350],Root:[150,440]};
+const G2C={};for(const c in CEN)CEN[c].forEach(g=>G2C[g]=c);
+const CH=[[64,47],[61,24],[63,4],[17,62],[43,23],[11,56],[16,48],[20,57],[20,34],[20,10],[35,36],[12,22],[45,21],[31,7],[8,1],[33,13],[10,57],[10,34],[25,51],[46,29],[2,14],[15,5],[34,57],[59,6],[27,50],[42,53],[3,60],[9,52],[26,44],[40,37],[18,58],[28,38],[32,54],[19,49],[39,55],[41,30]];
+const MOTOR=['Sacral','Heart','Solar','Root'];
+const LN=['Penyelidik','Pertapa','Martir','Oportunis','Heretik','Panutan'];
+const TY={'Generator':['Merespons','Frustrasi','Kepuasan'],'Manifesting Generator':['Merespons, lalu memberi tahu','Frustrasi dan kemarahan','Kepuasan dan kedamaian'],'Projector':['Menunggu undangan','Kepahitan','Kesuksesan'],'Manifestor':['Memberi tahu sebelum bertindak','Kemarahan','Kedamaian'],'Reflector':['Menunggu satu siklus bulan (sekitar 28 hari)','Kekecewaan','Kejutan']};
+const PL=['Matahari','Bumi','Node Utara','Node Selatan','Bulan','Merkurius','Venus','Mars','Jupiter','Saturnus','Uranus','Neptunus','Pluto'];
+const VAR=[['Digestion (Matahari Desain)','D',0,['Appetite','Taste','Thirst','Touch','Sound','Light']],['Environment (Node Desain)','D',2,['Caves','Markets','Kitchens','Mountains','Valleys','Shores']],['Motivation (Matahari Kepribadian)','P',0,['Fear','Hope','Desire','Need','Guilt','Innocence']],['Perspective (Node Kepribadian)','P',2,['Survival','Possibility','Power','Wanting','Probability','Personal']]];
+const $=i=>document.getElementById(i),mod=(a,n)=>((a%n)+n)%n;
+const CITY='Jakarta|-6.2088|106.8456|Asia/Jakarta;Bandung|-6.9175|107.6191|Asia/Jakarta;Bogor|-6.5944|106.7892|Asia/Jakarta;Bekasi|-6.2383|106.9756|Asia/Jakarta;Tangerang|-6.1783|106.63|Asia/Jakarta;Serang|-6.12|106.15|Asia/Jakarta;Cirebon|-6.7063|108.557|Asia/Jakarta;Semarang|-6.9667|110.4167|Asia/Jakarta;Yogyakarta|-7.7956|110.3695|Asia/Jakarta;Surakarta (Solo)|-7.5666|110.8167|Asia/Jakarta;Surabaya|-7.2575|112.7521|Asia/Jakarta;Malang|-7.9797|112.6304|Asia/Jakarta;Medan|3.5952|98.6722|Asia/Jakarta;Banda Aceh|5.5483|95.3238|Asia/Jakarta;Padang|-0.9471|100.4172|Asia/Jakarta;Pekanbaru|0.5071|101.4478|Asia/Jakarta;Batam|1.0456|104.0305|Asia/Jakarta;Tanjung Pinang|0.9186|104.4583|Asia/Jakarta;Jambi|-1.6101|103.6131|Asia/Jakarta;Palembang|-2.9761|104.7754|Asia/Jakarta;Bengkulu|-3.8004|102.2655|Asia/Jakarta;Pangkalpinang|-2.1316|106.1169|Asia/Jakarta;Bandar Lampung|-5.4292|105.261|Asia/Jakarta;Pontianak|-0.0263|109.3425|Asia/Pontianak;Palangkaraya|-2.2161|113.9135|Asia/Pontianak;Banjarmasin|-3.3194|114.5908|Asia/Makassar;Balikpapan|-1.2379|116.8529|Asia/Makassar;Samarinda|-0.5022|117.1536|Asia/Makassar;Tenggarong|-0.4154|116.9996|Asia/Makassar;Makassar|-5.1477|119.4327|Asia/Makassar;Palu|-0.8917|119.8707|Asia/Makassar;Manado|1.4748|124.8421|Asia/Makassar;Kendari|-3.9985|122.513|Asia/Makassar;Gorontalo|0.5435|123.0568|Asia/Makassar;Mamuju|-2.6748|118.8888|Asia/Makassar;Denpasar|-8.6705|115.2126|Asia/Makassar;Mataram|-8.5833|116.1167|Asia/Makassar;Kupang|-10.1772|123.607|Asia/Makassar;Ambon|-3.6954|128.1814|Asia/Jayapura;Ternate|0.7833|127.3667|Asia/Jayapura;Jayapura|-2.5337|140.7181|Asia/Jayapura;Manokwari|-0.8615|134.062|Asia/Jayapura;Sorong|-0.8762|131.2558|Asia/Jayapura;Merauke|-8.4932|140.4018|Asia/Jayapura;Kuala Lumpur|3.139|101.6869|Asia/Kuala_Lumpur;Singapura|1.3521|103.8198|Asia/Singapore;Bangkok|13.7563|100.5018|Asia/Bangkok;Tokyo|35.6762|139.6503|Asia/Tokyo;Seoul|37.5665|126.978|Asia/Seoul;Hong Kong|22.3193|114.1694|Asia/Hong_Kong;Sydney|-33.8688|151.2093|Australia/Sydney;Perth|-31.9505|115.8605|Australia/Perth;Mekkah|21.3891|39.8579|Asia/Riyadh;Dubai|25.2048|55.2708|Asia/Dubai;Kairo|30.0444|31.2357|Africa/Cairo;London|51.5074|-0.1278|Europe/London;Amsterdam|52.3676|4.9041|Europe/Amsterdam;Paris|48.8566|2.3522|Europe/Paris;New York|40.7128|-74.006|America/New_York;Los Angeles|34.0522|-118.2437|America/Los_Angeles'.split(';').map(s=>s.split('|'));
+const tzl=[...new Set([...(typeof Intl.supportedValuesOf==='function'?Intl.supportedValuesOf('timeZone'):[]),...CITY.map(c=>c[3]),'UTC'])].sort();
+$('z').innerHTML=tzl.map(z=>`<option>${z}</option>`).join('');$('z').value='Asia/Makassar';
+$('cl').innerHTML=CITY.map(c=>`<option value="${c[0]}">`).join('');
+$('cty').oninput=()=>{const c=CITY.find(x=>x[0].toLowerCase()===$('cty').value.trim().toLowerCase());if(c){$('la').value=c[1];$('lo').value=c[2];$('z').value=c[3]}};
+function tzo(tz,ms){const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'}).formatToParts(new Date(ms)).map(x=>[x.type,x.value]));return(Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ms/1000)*1000)/36e5}
+const GN='Self-Expression|Direction of the Self|Ordering|Formulization|Fixed Rhythms|Friction|Role of the Self|Contribution|Focus|Behavior of the Self|Ideas|Caution|The Listener|Power Skills|Extremes|Skills|Opinions|Correction|Wanting|The Now|The Hunter|Openness|Assimilation|Rationalization|Spirit of the Self|The Egoist|Caring|The Game Player|Perseverance|Recognition of Feelings|Influence|Continuity|Privacy|Power|Change|Crisis|Friendship|The Fighter|Provocation|Aloneness|Contraction|Growth|Insight|Alertness|The Gatherer|Determination of the Self|Realization|Depth|Principles|Values|Shock|Stillness|Beginnings|Ambition|Spirit|Stimulation|Intuitive Insight|Vitality|Sexuality|Limitation|Mystery|Details|Doubt|Confusion'.split('|');
+const CHNM='Abstraction|Awareness|Logic|Acceptance|Structuring|Curiosity|The Wavelength|The Brainwave|Charisma|Awakening|Transitoriness|Openness|Money Line|The Alpha|Inspiration|The Prodigal|Perfected Form|Exploration|Initiation|Discovery|The Beat|Rhythm|Power|Intimacy|Preservation|Maturation|Mutation|Concentration|Surrender|Community|Judgment|Struggle|Transformation|Synthesis|Emoting|Recognition'.split('|');
+function lon(b,d){const v=Astronomy.GeoVector(b,d,true);const r=Astronomy.Rotation_EQJ_ECT(v.t);return Astronomy.SphereFromVector(Astronomy.RotateVector(r,v)).lon}
+function node(d){if($('nd').value==='m'){const T=(d.getTime()/864e5+2440587.5-2451545)/36525;return mod(125.0445479-1934.1362891*T+0.0020754*T*T+T*T*T/467441,360)}const B=Astronomy.Body,h=864e3,t0=d.getTime(),g=t=>Astronomy.GeoVector(B.Moon,new Date(t),false),c0=g(t0),R=Astronomy.Rotation_EQJ_ECT(c0.t),r=v=>Astronomy.RotateVector(R,v),a=r(g(t0-h)),b=r(g(t0+h)),c=r(c0),vx=b.x-a.x,vy=b.y-a.y,vz=b.z-a.z;return mod(Math.atan2(c.y*vz-c.z*vy,-(c.z*vx-c.x*vz))*180/Math.PI,360)}
+function gi(l){const r=mod(l-302,360);const g=Math.min(63,Math.floor(r/5.625));let x=r-g*5.625;const ln=Math.min(5,Math.floor(x/.9375));x-=ln*.9375;const c=Math.min(5,Math.floor(x/.15625));x-=c*.15625;const t=Math.min(5,Math.floor(x/(.15625/6)));x-=t*(.15625/6);const b=Math.min(4,Math.floor(x/(.15625/30)));return{g:GO[g],l:ln+1,c:c+1,t:t+1,b:b+1}}
+function planets(d){const B=Astronomy.Body,s=lon(B.Sun,d),nn=node(d);const a=[s,mod(s+180,360),nn,mod(nn+180,360),lon(B.Moon,d)];['Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'].forEach(n=>a.push(lon(B[n],d)));return a.map((l,i)=>({n:PL[i],l,...gi(l)}))}
+function designDate(bd){const S=Astronomy.Body.Sun,tg=mod(lon(S,bd)-88,360);let t=bd.getTime()-88*864e5;for(let i=0;i<12;i++){const df=mod(tg-lon(S,new Date(t))+180,360)-180;t+=df/.9856*864e5;if(Math.abs(df)<1e-6)break}return new Date(t)}
+function analyze(P,D){
+const act=new Set([...P,...D].map(p=>p.g));
+const ch=CH.filter(([a,b])=>act.has(a)&&act.has(b));
+const dc=new Set(),adj={};
+ch.forEach(([a,b])=>{const x=G2C[a],y=G2C[b];dc.add(x);dc.add(y);(adj[x]=adj[x]||new Set()).add(y);(adj[y]=adj[y]||new Set()).add(x)});
+const seen=new Set(),comps=[];
+dc.forEach(c=>{if(seen.has(c))return;const comp=new Set(),q=[c];while(q.length){const u=q.pop();if(comp.has(u))continue;comp.add(u);seen.add(u);(adj[u]||[]).forEach(v=>q.push(v))}comps.push(comp)});
+const th=comps.find(c=>c.has('Throat'));
+const motorTh=th&&MOTOR.some(m=>th.has(m));
+let type;
+if(!dc.size)type='Reflector';
+else if(dc.has('Sacral'))type=motorTh?'Manifesting Generator':'Generator';
+else type=motorTh?'Manifestor':'Projector';
+let auth;
+if(type==='Reflector')auth='Lunar (tunggu satu siklus bulan)';
+else if(dc.has('Solar'))auth='Emosional (Plexus Surya)';
+else if(dc.has('Sacral'))auth='Sakral';
+else if(dc.has('Spleen'))auth='Limpa';
+else if(dc.has('Heart'))auth='Ego (Jantung)';
+else if(dc.has('G')&&th&&th.has('G'))auth='Self-Projected (Pusat G)';
+else auth='Mental / lingkungan (papan suara)';
+const defn=['Tanpa definisi','Single','Split','Triple Split','Quadruple Split'][comps.length];
+return{ch,dc,type,auth,defn};}
+function bodygraph(ch,dc){
+const key={};CH.forEach(c=>{const k=[G2C[c[0]],G2C[c[1]]].sort().join();(key[k]=key[k]||[]).push(c)});
+let s='<svg viewBox="0 0 300 470" role="img" aria-label="Bodygraph">';
+CH.forEach(c=>{const a=G2C[c[0]],b=G2C[c[1]],k=[a,b].sort().join(),L=key[k],i=L.indexOf(c),n=L.length,o=(i-(n-1)/2)*12;
+let [x1,y1]=XY[a],[x2,y2]=XY[b];const dx=x2-x1,dy=y2-y1,m=Math.hypot(dx,dy),nx=-dy/m*o,ny=dx/m*o;
+const on=ch.includes(c);
+s+=`<line x1="${x1+nx}" y1="${y1+ny}" x2="${x2+nx}" y2="${y2+ny}" stroke="${on?'var(--ac)':'var(--ln)'}" stroke-width="${on?5:1.5}" stroke-linecap="round"/>`});
+for(const c in XY){const[x,y]=XY[c],on=dc.has(c);s+=`<rect x="${x-27}" y="${y-18}" width="54" height="36" rx="8" fill="${on?'var(--ac)':'var(--card)'}" stroke="var(--ac)" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="10" font-weight="600" fill="${on?'#fff':'var(--tx)'}">${CN[c].split(' ')[0]}</text>`}
+return s+'</svg>'}
+const GP={64:[142,64],61:[160,64],63:[178,64],47:[142,84],24:[160,84],4:[178,84],17:[146,108],43:[160,128],11:[174,108],62:[141,150],23:[160,150],56:[179,150],16:[130,166],20:[130,184],12:[190,162],35:[190,174],45:[190,186],31:[141,192],8:[160,192],33:[179,192],7:[148,225],1:[160,214],13:[172,225],10:[126,245],25:[194,245],15:[148,265],2:[160,276],46:[172,265],21:[224,272],51:[211,292],26:[212,312],40:[240,312],48:[56,319],57:[76,333],44:[97,348],50:[112,358],32:[97,368],28:[79,381],18:[58,396],22:[256,317],36:[242,328],37:[227,340],6:[205,358],49:[223,373],55:[239,386],30:[256,399],5:[141,335],14:[160,335],29:[179,335],34:[130,346],27:[130,372],59:[190,360],42:[141,387],3:[160,387],9:[179,387],53:[141,424],60:[160,424],52:[179,424],54:[130,436],38:[130,448],58:[130,460],19:[190,436],39:[190,448],41:[190,460]};
+const CPOL={Head:'160,16 192,64 128,64',Ajna:'128,84 192,84 160,130',Throat:'130,150 190,150 190,192 130,192',G:'160,214 194,245 160,276 126,245',Heart:'224,272 250,312 198,312',Spleen:'46,312 46,404 112,358',Solar:'262,312 262,404 205,358',Sacral:'130,335 190,335 190,387 130,387',Root:'130,424 190,424 190,466 130,466'};
+const CLB={Head:[160,52],Ajna:[160,96],Throat:[160,171],G:[160,246],Heart:[224,302],Spleen:[66,358],Sacral:[160,362],Solar:[240,358],Root:[160,446]};
+const BEND={'20-34':60};
+function bg2(ch,dc,sp,sd){
+let s='<svg viewBox="0 0 300 480" style="max-width:380px" role="img" aria-label="Bodygraph">';
+for(const c in CPOL)s+=`<polygon points="${CPOL[c]}" fill="${dc.has(c)?'var(--acf)':'var(--card)'}" stroke="var(--ac)" stroke-width="1.5" stroke-linejoin="round"/><text x="${CLB[c][0]}" y="${CLB[c][1]}" text-anchor="middle" font-size="7.5" fill="var(--mut)">${CN[c].split(' ')[0]}</text>`;
+CH.forEach(([a,b],i)=>{const[x1,y1]=GP[a],[x2,y2]=GP[b],bd=BEND[a+'-'+b]||0,L=Math.hypot(x2-x1,y2-y1),cx=(x1+x2)/2-(y2-y1)/L*bd,cy=(y1+y2)/2+(x2-x1)/L*bd,d=`M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}`,on=ch.includes(CH[i]);
+if(!on){s+=`<path d="${d}" fill="none" stroke="var(--ln)" stroke-width="2"/>`;return}
+const hD=sd.has(a)&&sd.has(b),hP=sp.has(a)&&sp.has(b),mix=hD===hP;
+s+=`<path d="${d}" fill="none" stroke="${!mix&&hD?'var(--des)':'var(--tx)'}" stroke-width="4.5" stroke-linecap="round"/>`;
+if(mix)s+=`<path d="${d}" fill="none" stroke="var(--des)" stroke-width="4.5" stroke-dasharray="4 4"/>`});
+for(const g in GP){const[x,y]=GP[g],iD=sd.has(+g),iP=sp.has(+g),act=iD||iP;
+s+=`<circle cx="${x}" cy="${y}" r="6.5" fill="${iP?'var(--tx)':iD?'var(--des)':'var(--card)'}" stroke="${iD?'var(--des)':'var(--ln)'}" stroke-width="${iD&&iP?2.2:1}"/><text x="${x}" y="${y+2.6}" text-anchor="middle" font-size="7" font-weight="600" fill="${act?'var(--bg)':'var(--mut)'}">${g}</text>`}
+return s+'</svg>'}
+const XC=['the Sphinx 4|the Sphinx 2|Laws 1|Explanation 3|Consciousness 4|Eden 3|the Sphinx 3|Contagion 2|Planning 4|the Vessel of Love 4|Eden 4|Eden 2|the Sphinx 1|Contagion 4|the Vessel of Love 2|Planning 2|Service 1|Service 3|the Four Ways 4|the Sleeping Phoenix 2|Tension 1|Rulership 1|Explanation 2|the Four Ways 1|the Vessel of Love 1|Rulership 4|the Unexpected 1|the Unexpected 3|Contagion 3|Contagion 1|the Unexpected 2|Maya 3|the Four Ways 2|the Sleeping Phoenix 4|Consciousness 2|Eden 1|Planning 1|Tension 4|Tension 2|Planning 3|the Unexpected 4|Maya 1|Explanation 4|the Four Ways 3|Rulership 2|the Vessel of Love 3|Rulership 3|Tension 3|Explanation 1|Laws 3|Penetration 1|Service 2|Penetration 2|Penetration 4|the Sleeping Phoenix 1|Laws 2|Penetration 3|Service 4|the Sleeping Phoenix 3|Laws 4|Maya 4|Maya 2|Consciousness 1|Consciousness 3',
+'Self-Expression|the Driver|Mutation|Formulization|Habits|Conflict|Interaction|Contribution|Focus|Behavior|Ideas|Articulation|Listening|Empowering|Extremes|Experimentation|Opinions|Correction|Need|the Now|Control|Grace|Assimilation|Rationalization|Innocence|the Trickster|Caring|Risks|Commitment|Fates|Influence|Conservation|Retreat|Power|Experience|Crisis|Bargains|Opposition|Provocation|Denial|Fantasy|Completion|Insight|Alertness|Possession|Serendipity|Oppression|Depth|Principles|Values|Shock|Stillness|Beginnings|Ambition|Moods|Stimulation|Intuition|Vitality|Strategy|Limitation|Thinking|Detail|Doubts|Confusion',
+'Defiance 2|Defiance 1|Wishes 1|Revolution 1|Separation 2|the Plane 1|Masks 1|Uncertainty 1|Identification 2|Prevention 2|Education 2|Education 1|Masks 2|Uncertainty 2|Prevention 1|Identification 1|Upheaval 1|Upheaval 2|Refinement 2|Duality 1|Endeavor 1|Informing 2|Dedication 1|Incarnation 1|Healing 2|Confrontation 2|Alignment 1|Alignment 2|Industry 1|Industry 2|the Alpha 1|Limitation 2|Refinement 1|Duality 2|Separation 1|the Plane 2|Migration 2|Individualism 2|Individualism 1|Migration 1|the Alpha 2|Limitation 1|Dedication 2|Incarnation 2|Confrontation 1|Healing 1|Informing 1|Endeavor 2|Revolution 2|Wishes 2|the Clarion 1|Demands 1|Cycles 1|Cycles 2|Spirit 2|Distraction 1|the Clarion 2|Demands 2|Spirit 1|Distraction 2|Obscuration 2|Obscuration 1|Dominion 2|Dominion 1'].map(s=>s.split('|'));
+const G3={64:[160,70],61:[180,70],63:[200,70],47:[160,96],24:[180,96],4:[200,96],17:[166,126],11:[194,126],43:[180,144],62:[160,176],23:[180,176],56:[200,176],16:[148,194],20:[148,212],12:[212,188],35:[212,200],45:[212,212],31:[160,222],8:[180,222],33:[200,222],7:[167,260],1:[180,250],13:[193,260],10:[140,290],25:[220,290],15:[157,308],2:[180,328],46:[203,308],21:[252,316],51:[240,331],26:[236,350],40:[268,350],48:[38,368],57:[55,380],44:[76,396],50:[96,410],32:[75,423],28:[56,435],18:[38,447],22:[322,368],36:[306,380],37:[284,396],6:[264,410],49:[285,423],55:[304,435],30:[322,447],5:[160,400],14:[180,400],29:[200,400],34:[148,412],27:[148,438],59:[212,430],42:[160,452],3:[180,452],9:[200,452],53:[160,480],60:[180,480],52:[200,480],54:[148,494],38:[148,507],58:[148,520],19:[212,494],39:[212,507],41:[212,520]};
+const P3={Head:'180,14 212,70 148,70',Ajna:'148,96 212,96 180,150',Throat:'148,176 212,176 212,222 148,222',G:'180,246 222,290 180,334 138,290',Heart:'252,312 276,350 228,350',Spleen:'30,362 30,452 96,410',Solar:'330,362 330,452 264,410',Sacral:'148,400 212,400 212,452 148,452',Root:'148,480 212,480 212,532 148,532'};
+const CC={Head:'#f2dd5b',Ajna:'#6fb26a',Throat:'#b08a5e',G:'#f2dd5b',Heart:'#e0574f',Spleen:'#b08a5e',Solar:'#b08a5e',Sacral:'#e0574f',Root:'#b08a5e'};
+const L3={Head:[180,50],Ajna:[180,114],Throat:[180,202],G:[180,294],Heart:[252,342],Spleen:[52,410],Solar:[308,410],Sacral:[180,430],Root:[180,508]};
+function bg3(ch,dc,sp,sd){
+const K=g=>sd.has(g)&&sp.has(g)?'B':sd.has(g)?'D':sp.has(g)?'P':'';
+const seg=(d,k)=>`<path d="${d}" fill="none" stroke="${k==='D'?'var(--des)':'var(--tx)'}" stroke-width="5"/>`+(k==='B'?`<path d="${d}" fill="none" stroke="var(--des)" stroke-width="5" stroke-dasharray="4 4"/>`:'');
+let s='<svg viewBox="0 0 360 548" style="max-width:420px" role="img" aria-label="Bodygraph">';
+for(const c in P3){const on=dc.has(c);s+=`<polygon points="${P3[c]}" fill="${on?CC[c]:'var(--card)'}" stroke="${on?'rgba(0,0,0,.4)':'var(--mut)'}" stroke-width="1.2" stroke-linejoin="round"/><text x="${L3[c][0]}" y="${L3[c][1]}" text-anchor="middle" font-size="8" fill="${on?'#1f1d1a':'var(--mut)'}">${CN[c].split(' ')[0]}</text>`}
+CH.forEach(([a,b],i)=>{const[x1,y1]=G3[a],[x2,y2]=G3[b],bd=BEND[a+'-'+b]||0,L=Math.hypot(x2-x1,y2-y1),cx=(x1+x2)/2-(y2-y1)/L*bd,cy=(y1+y2)/2+(x2-x1)/L*bd;
+if(!ch.includes(CH[i])){s+=`<path d="M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="var(--ln)" stroke-width="3"/>`;return}
+const mx=(x1+2*cx+x2)/4,my=(y1+2*cy+y2)/4;
+s+=seg(`M${x1} ${y1}Q${(x1+cx)/2} ${(y1+cy)/2} ${mx} ${my}`,K(a))+seg(`M${mx} ${my}Q${(cx+x2)/2} ${(cy+y2)/2} ${x2} ${y2}`,K(b))});
+for(const g in G3){const[x,y]=G3[g],k=K(+g),a=k!=='';
+s+=k==='B'?`<path d="M${x} ${y-7}A7 7 0 0 0 ${x} ${y+7}Z" fill="var(--des)"/><path d="M${x} ${y-7}A7 7 0 0 1 ${x} ${y+7}Z" fill="var(--tx)"/>`:`<circle cx="${x}" cy="${y}" r="7" fill="${k==='D'?'var(--des)':k==='P'?'var(--tx)':'var(--card)'}" stroke="${a?'var(--card)':'var(--ln)'}" stroke-width="1.4"/>`;
+s+=`<text x="${x}" y="${y+2.8}" text-anchor="middle" font-size="7.5" font-weight="600" fill="${a?'var(--bg)':'var(--mut)'}">${g}</text>`}
+return s+'</svg>'}
+function calc(){
+const er=$('err');er.textContent='';
+if(typeof Astronomy==='undefined'){er.textContent='Pustaka astronomi gagal dimuat. Muat ulang halaman.';return}
+if(!$('d').value||!$('t').value){er.textContent='Isi tanggal dan jam lahir.';return}
+const[y,m,d]=$('d').value.split('-').map(Number),[h,mi]=$('t').value.split(':').map(Number),tz=$('z').value;
+const u=Date.UTC(y,m-1,d,h,mi),o1=tzo(tz,u),off=tzo(tz,u-o1*36e5),bd=new Date(u-off*36e5),dd=designDate(bd);
+const P=planets(bd),D=planets(dd),A=analyze(P,D),T=TY[A.type];
+const pr=P[0].l+'/'+D[0].l,pn=LN[P[0].l-1]+' / '+LN[D[0].l-1];
+const at=P[0].l===4&&D[0].l===1?1:P[0].l>=5?2:0,ang=['Sudut Kanan','Juxtaposition','Sudut Kiri'][at],cx=['Right Angle','Juxtaposition','Left Angle'][at]+' Cross of '+XC[at][P[0].g-1];
+const loc=t=>new Date(t.getTime()+tzo(tz,t.getTime())*36e5).toISOString().replace('T',' ').slice(0,16);
+const nm=$('n').value.trim();
+const f=p=>`${p.g}.${p.l}<small>${p.c}.${p.t}.${p.b}</small>`;
+const chips=a=>a.map(x=>`<span class="chip">${x}</span>`).join('')||'<span class="note">Tidak ada</span>';
+const open=Object.keys(CEN).filter(c=>!A.dc.has(c));
+$('out').innerHTML=`
+<div class="card"><h2>${nm?nm+' — ':''}Ringkasan</h2><div class="grid">
+<div class="k"><b>Tipe</b><span>${A.type}</span></div>
+<div class="k"><b>Strategi</b><span>${T[0]}</span></div>
+<div class="k"><b>Otoritas</b><span>${A.auth}</span></div>
+<div class="k"><b>Profil</b><span>${pr}</span><small>${pn}</small></div>
+<div class="k"><b>Definisi</b><span>${A.defn}</span></div>
+<div class="k"><b>Salib Inkarnasi</b><span>${cx}</span><small>${ang} · ${P[0].g}/${P[1].g} | ${D[0].g}/${D[1].g}</small></div>
+<div class="k"><b>Tema bukan-diri</b><span>${T[1]}</span></div>
+<div class="k"><b>Tanda keselarasan</b><span>${T[2]}</span></div></div>
+<p class="note">Zona waktu ${tz} (UTC${off>=0?'+':''}${off}). Waktu lahir UTC: ${bd.toISOString().slice(0,16).replace('T',' ')}. Waktu Desain (Matahari 88° sebelum lahir): ${loc(dd)} waktu setempat.</p></div>
+<div class="card"><h2>Bodygraph</h2>${bg3(A.ch,A.dc,new Set(P.map(p=>p.g)),new Set(D.map(p=>p.g)))}<p class="note">Merah: Desain. Hitam: Kepribadian. Gerbang setengah merah setengah hitam: aktif di keduanya. Warna tiap separuh saluran mengikuti gerbang di ujungnya.</p></div>
+<div class="card"><h2>Posisi planet</h2><table><tr><th></th><th class="des">Desain</th><th class="pers">Kepribadian</th></tr>
+${P.map((p,i)=>`<tr><td>${p.n}</td><td class="des">${f(D[i])}</td><td class="pers">${f(p)}</td></tr>`).join('')}</table>
+<p class="note">Format: gerbang.garis, di bawahnya warna.nada.basis.</p></div>
+<div class="card"><h2>Pusat</h2><p><b>Terdefinisi</b><br>${chips(Object.keys(CEN).filter(c=>A.dc.has(c)).map(c=>CN[c]))}</p><p><b>Terbuka</b><br>${chips(open.map(c=>CN[c]))}</p>
+<h2>Saluran terdefinisi (${A.ch.length})</h2>${chips(A.ch.map(c=>c[0]+'-'+c[1]+' '+CHNM[CH.indexOf(c)]))}
+</div>
+<div class="card"><h2>Gerbang aktif</h2><table><tr><th>No.</th><th>Nama</th><th>Pusat</th><th>Sumber</th></tr>${(()=>{const sp=new Set(P.map(p=>p.g)),sd=new Set(D.map(p=>p.g));return[...new Set([...sp,...sd])].sort((a,b)=>a-b).map(g=>`<tr><td>${g}</td><td>${GN[g-1]}</td><td>${CN[G2C[g]].split(' ')[0]}</td><td>${sd.has(g)&&sp.has(g)?'Keduanya':sd.has(g)?'Desain':'Kepribadian'}</td></tr>`).join('')})()}</table></div>
+<div class="card"><h2>Variabel (panah)</h2><table><tr><th>Aspek</th><th>Warna</th><th>Panah</th></tr>
+${VAR.map(([l,w,i,nms])=>{const p=(w==='D'?D:P)[i];return`<tr><td>${l}</td><td>${p.c} — ${nms[p.c-1]}</td><td>${p.t<=3?'Kiri':'Kanan'}</td></tr>`}).join('')}</table></div>`;
+$('out').scrollIntoView({behavior:'smooth'})}
+$('go').onclick=calc;
+</script></body></html>
