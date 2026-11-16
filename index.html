@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Human Design | Fauzan Tarot</title>
+  <style>
+    :root {
+      --primary: #1e293b;
+      --accent: #b45309;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #334155;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 650px;
+      background: var(--card);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 1.6rem;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+    .row .form-group {
+      flex: 1;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background-color: #0f172a;
+    }
+    button:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+    #loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    #result {
+      display: none;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 2px solid #e2e8f0;
+    }
+    .grid-result {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: #f1f5f9;
+      padding: 14px;
+      border-radius: 10px;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 4px;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+    }
+    .error-msg {
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: none;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Kalkulator Human Design</h1>
+  <p class="subtitle">Masukkan data kelahiran lengkap untuk melihat cetak biru energimu</p>
+
+  <form id="hdForm">
+    <div class="form-group">
+      <label for="name">Nama Lengkap</label>
+      <input type="text" id="name" placeholder="Contoh: Fauzan" required>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="date">Tanggal Lahir</label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="form-group">
+        <label for="time">Jam Lahir</label>
+        <input type="time" id="time" required>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="city">Kota Kelahiran</label>
+        <input type="text" id="city" placeholder="Contoh: Palu, Makassar, Jakarta" required>
+      </div>
+      <div class="form-group">
+        <label for="tz">Zona Waktu</label>
+        <select id="tz">
+          <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
+          <option value="Asia/Makassar" selected>WITA (Asia/Makassar)</option>
+          <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn">Hitung Chart Sekarang</button>
+  </form>
+
+  <div id="loading">Menghitung posisi planet & gerbang energi...</div>
+  <div id="errorBox" class="error-msg"></div>
+
+  <div id="result">
+    <h2 style="margin-top:0; color:var(--primary);" id="resName">Hasil Chart</h2>
+    <div class="grid-result" id="summaryGrid"></div>
+    
+    <details>
+      <summary style="cursor:pointer; font-weight:600; color:var(--accent); margin-bottom:10px;">Lihat Detail Data Teknis (JSON)</summary>
+      <pre id="rawJson"></pre>
+    </details>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://humandesign-one.vercel.app/v1/chart";
+
+  document.getElementById("hdForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const city = document.getElementById("city").value.trim();
+    const tz = document.getElementById("tz").value;
+
+    const submitBtn = document.getElementById("submitBtn");
+    const loading = document.getElementById("loading");
+    const resultDiv = document.getElementById("result");
+    const errorBox = document.getElementById("errorBox");
+
+    submitBtn.disabled = true;
+    loading.style.display = "block";
+    resultDiv.style.display = "none";
+    errorBox.style.display = "none";
+
+    try {
+      // 1. Cari koordinat Latitude & Longitude otomatis dari nama kota
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+      const geoData = await geoRes.json();
+
+      if (!geoData || geoData.length === 0) {
+        throw new Error(`Kota "${city}" tidak ditemukan. Coba gunakan nama kota kabupaten terdekat.`);
+      }
+
+      const latitude = parseFloat(geoData[0].lat);
+      const longitude = parseFloat(geoData[0].lon);
+
+      // 2. Kirim data ke API Vercel milikmu
+      const apiRes = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, time, latitude, longitude, tz })
+      });
+
+      const responseData = await apiRes.json();
+
+      if (!apiRes.ok || responseData.success === false) {
+        throw new Error(responseData.error?.message || "Gagal menghitung chart dari server.");
+      }
+
+      // 3. Tampilkan hasil ke layar
+      const chart = responseData.data || responseData;
+      document.getElementById("resName").textContent = `Cetak Biru Energi: ${name}`;
+      
+      const summaryGrid = document.getElementById("summaryGrid");
+      summaryGrid.innerHTML = `
+        <div class="stat-box">
+          <div class="stat-label">Tipe (Type)</div>
+          <div class="stat-value">${chart.type || "-"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Strategi (Strategy)</div>
+          <div class="stat-value">${chart.strategy || "-"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Otoritas (Authority)</div>
+          <div class="stat-value">${chart.authority || "-"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Profil (Profile)</div>
+          <div class="stat-value">${chart.profile || "-"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Definisi (Definition)</div>
+          <div class="stat-value">${chart.definition || "-"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Incarnation Cross</div>
+          <div class="stat-value">${chart.incarnationCross || chart.cross || "-"}</div>
+        </div>
+      `;
+
+      document.getElementById("rawJson").textContent = JSON.stringify(chart, null, 2);
+      resultDiv.style.display = "block";
+
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      loading.style.display = "none";
+    }
+  });
+</script>
+
+</body>
+</html>
