@@ -50,6 +50,13 @@ button:hover{background:var(--gold);transform:translateY(-1px)}
 th{color:var(--gold);font-weight:500;font-size:.75rem;letter-spacing:1px;text-transform:uppercase}
 .chip{border:1px solid var(--gold-dim)}
 footer{text-align:center;margin-top:26px;font-size:.7rem;color:#444;letter-spacing:1px}
+main{max-width:720px}
+.bgw{display:grid;grid-template-columns:92px 1fr 92px;gap:10px;align-items:start}
+.pc{border-radius:8px;padding:6px 4px;color:#fff;text-align:center}
+.pc b{display:block;font:500 .68rem 'Manrope',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:2px 0 6px}
+.pc div{display:flex;justify-content:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.18);font-weight:500;font-size:.95rem}
+.pc span{width:1.3em;text-align:center;opacity:.9}
+@media(max-width:560px){.bgw{grid-template-columns:1fr 1fr}.bgc{grid-column:1/-1;order:-1}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card{animation:none}}
 </style></head><body><canvas id="sky"></canvas><div class="bgg"></div><main>
 <div class="eyebrow">Human Design</div><h1>Kalkulator Human Design</h1>
@@ -161,6 +168,27 @@ for(const g in G3){const[x,y]=G3[g],k=K(+g),a=k!=='';
 s+=k==='B'?`<path d="M${x} ${y-7}A7 7 0 0 0 ${x} ${y+7}Z" fill="var(--des)"/><path d="M${x} ${y-7}A7 7 0 0 1 ${x} ${y+7}Z" fill="var(--tx)"/>`:`<circle cx="${x}" cy="${y}" r="7" fill="${k==='D'?'var(--des)':k==='P'?'var(--tx)':'var(--card)'}" stroke="${a?'var(--card)':'var(--ln)'}" stroke-width="1.4"/>`;
 s+=`<text x="${x}" y="${y+2.8}" text-anchor="middle" font-size="7.5" font-weight="600" fill="${a?'var(--bg)':'var(--mut)'}">${g}</text>`}
 return s+'</svg>'}
+const G4={64:[730,207],61:[772,207],63:[814,207],47:[730,299],24:[772,299],4:[814,299],17:[730,358],11:[814,358],43:[772,414],62:[731,564],23:[772,564],56:[814,564],16:[693,602],20:[693,651],35:[849,602],12:[849,638],45:[849,677],31:[730,699],8:[772,699],33:[814,699],7:[731,798],1:[772,832],13:[814,798],10:[686,843],25:[857,843],15:[730,885],46:[814,885],2:[772,926],51:[970,929],21:[1004,962],26:[909,1002],40:[1036,1003],48:[391,1109],57:[433,1140],44:[468,1163],50:[501,1186],32:[454,1214],28:[418,1236],18:[382,1260],36:[1151,1110],22:[1109,1139],37:[1073,1163],6:[1041,1184],49:[1087,1214],55:[1122,1236],30:[1158,1259],5:[730,1142],14:[772,1142],29:[814,1142],34:[696,1203],27:[696,1241],59:[844,1241],42:[730,1262],3:[772,1262],9:[814,1262],53:[730,1358],60:[772,1358],52:[814,1358],54:[696,1379],38:[696,1420],58:[696,1461],19:[847,1379],39:[847,1420],41:[847,1461]};
+const S4={Head:['polygon','points=\'773,62 883,230 663,230\''],Ajna:['polygon','points=\'663,277 883,277 773,447\''],Throat:['rect','x=\'670\' y=\'540\' width=\'205\' height=\'182\' rx=\'28\''],G:['path','d=\'M773 800C760 760 700 758 670 790C640 825 655 870 700 910L773 968L846 910C891 870 906 825 876 790C846 758 786 760 773 800Z\''],Heart:['polygon','points=\'968,895 877,1028 1070,1028\''],Spleen:['polygon','points=\'352,1064 352,1296 535,1185\''],Solar:['polygon','points=\'1193,1064 1193,1296 1012,1185\''],Sacral:['rect','x=\'670\' y=\'1115\' width=\'205\' height=\'175\' rx=\'28\''],Root:['rect','x=\'670\' y=\'1330\' width=\'205\' height=\'173\' rx=\'28\'']};
+const CC4={Head:'#e9dc8a',Ajna:'#b8e0a0',Throat:'#c8679c',G:'#d9efb4',Heart:'#e8918a',Spleen:'#d3b48a',Solar:'#d9efb4',Sacral:'#c8679c',Root:'#d3b48a'};
+const B4={'16-48':240,'20-57':200,'20-34':480,'20-10':60,'10-57':150,'26-44':140,'35-36':-240,'12-22':-200,'45-21':-90,'25-51':-40,'40-37':-30,'59-6':-30,'18-58':100,'28-38':90,'32-54':80,'19-49':80,'39-55':90,'41-30':100};
+const GL=['☉','⊕','☊','☋','☽','☿','♀','♂','♃','♄','♅','♆','♇'];
+function bg4(ch,dc,sp,sd,P,D){
+const K=g=>sd.has(g)&&sp.has(g)?'B':sd.has(g)?'D':sp.has(g)?'P':'',cD='#7cb342',cP='#b0407f',gy='#2c2c35';
+const seg=(d,k)=>`<path d='${d}' fill='none' stroke='${k==='D'?cD:cP}' stroke-width='20'/>`+(k==='B'?`<path d='${d}' fill='none' stroke='${cD}' stroke-width='20' stroke-dasharray='16 16'/>`:'');
+let s=`<svg viewBox='330 40 880 1480' style='max-width:100%' role='img' aria-label='Bodygraph'>`;
+CH.forEach(([a,b],i)=>{const[x1,y1]=G4[a],[x2,y2]=G4[b],bd=B4[a+'-'+b]||0,L=Math.hypot(x2-x1,y2-y1),cx=(x1+x2)/2-(y2-y1)/L*bd,cy=(y1+y2)/2+(x2-x1)/L*bd;
+s+=`<path d='M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}' fill='none' stroke='${gy}' stroke-width='20'/>`;
+if(!ch.includes(CH[i]))return;
+const mx=(x1+2*cx+x2)/4,my=(y1+2*cy+y2)/4;
+s+=seg(`M${x1} ${y1}Q${(x1+cx)/2} ${(y1+cy)/2} ${mx} ${my}`,K(a))+seg(`M${mx} ${my}Q${(cx+x2)/2} ${(cy+y2)/2} ${x2} ${y2}`,K(b))});
+for(const c in S4){const[t,a]=S4[c],on=dc.has(c);s+=`<${t} ${a} fill='${on?CC4[c]:'#0d0d11'}' stroke='${on?'#0d0d11':'#cfcab8'}' stroke-width='3' stroke-linejoin='round'/>`}
+for(const g in G4){const[x,y]=G4[g],k=K(+g),on=dc.has(G2C[g]);
+s+=k?`<circle cx='${x}' cy='${y}' r='19' fill='#000' stroke='${k==='D'?cD:k==='P'?cP:'#c9a86a'}' stroke-width='4'/><text x='${x}' y='${y+8}' text-anchor='middle' font-size='22' font-weight='700' fill='#fff'>${g}</text>`:(on?`<circle cx='${x}' cy='${y}' r='19' fill='#fff'/>`:'')+`<text x='${x}' y='${y+8}' text-anchor='middle' font-size='22' fill='${on?'#222':'#8b8790'}'>${g}</text>`}
+const ar=(x,y,q,col)=>{const r=q.t>3,lx=r?x:x+26,rx=r?x+80:x+106,hd=r?`${rx+26},${y} ${rx},${y-16} ${rx},${y+16}`:`${x},${y} ${x+26},${y-16} ${x+26},${y+16}`;return `<path d='M${lx} ${y}H${rx}' stroke='${col}' stroke-width='7' stroke-dasharray='14 9'/><polygon points='${hd}' fill='${col}'/><text x='${x+140}' y='${y+16}' font-size='46' fill='#f2efe9'>${q.c}</text><text x='${x+172}' y='${y+22}' font-size='24' fill='#8b8790'>${q.t}</text>`};
+s+=ar(395,95,D[0],cD)+ar(395,180,D[2],cD)+ar(905,95,P[0],cP)+ar(905,180,P[2],cP);
+const cl=(A,t,c)=>`<div class='pc' style='background:${c}'><b>${t}</b>${A.map((p,i)=>`<div><span>${GL[i]}</span>${p.g}.${p.l}</div>`).join('')}</div>`;
+return `<div class='bgw'>${cl(D,'Design','#5d8a1e')}<div class='bgc'>${s}</svg></div>${cl(P,'Personality','#7b2154')}</div>`}
 function calc(){
 const er=$('err');er.textContent='';
 if(typeof Astronomy==='undefined'){er.textContent='Pustaka astronomi gagal dimuat. Muat ulang halaman.';return}
@@ -186,7 +214,7 @@ $('out').innerHTML=`
 <div class="k"><b>Tema bukan-diri</b><span>${T[1]}</span></div>
 <div class="k"><b>Tanda keselarasan</b><span>${T[2]}</span></div></div>
 <p class="note">Zona waktu ${tz} (UTC${off>=0?'+':''}${off}). Waktu lahir UTC: ${bd.toISOString().slice(0,16).replace('T',' ')}. Waktu Desain (Matahari 88° sebelum lahir): ${loc(dd)} waktu setempat.</p></div>
-<div class="card"><h2>Bodygraph</h2>${bg3(A.ch,A.dc,new Set(P.map(p=>p.g)),new Set(D.map(p=>p.g)))}<p class="note">Merah: Desain. Krem: Kepribadian. Gerbang setengah merah setengah krem: aktif di keduanya. Warna tiap separuh saluran mengikuti gerbang di ujungnya.</p></div>
+<div class="card"><h2>Bodygraph</h2>${bg4(A.ch,A.dc,new Set(P.map(p=>p.g)),new Set(D.map(p=>p.g)),P,D)}<p class="note">Hijau: Desain. Ungu: Kepribadian. Cincin emas: gerbang aktif di keduanya. Gerbang aktif berlingkar hitam, warna tiap separuh saluran mengikuti gerbang di ujungnya. Panah di atas menunjukkan warna dan nada Matahari serta Node.</p></div>
 <div class="card"><h2>Posisi planet</h2><table><tr><th></th><th class="des">Desain</th><th class="pers">Kepribadian</th></tr>
 ${P.map((p,i)=>`<tr><td>${p.n}</td><td class="des">${f(D[i])}</td><td class="pers">${f(p)}</td></tr>`).join('')}</table>
 <p class="note">Format: gerbang.garis, di bawahnya warna.nada.basis.</p></div>
